@@ -11,7 +11,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
 from scipy.special import elliprd, elliprf, elliprj, ellipeinc, ellipkinc, ellipe
-import astro as astro
 import scipy.integrate as integrate
 
 
@@ -358,8 +357,6 @@ def inso_mean_lon_lat_radians(lon1,lon2,phi1,phi2,eps,e,per):
 
 
 if __name__ == '__main__':
-    
-    #astro.astrofiles_path = "/Users/didier/ Avec sauvegarde/Didier/Conceptual models/Inso & Models/insolation/astrofiles/"
     
     deg_to_rad = np.pi/180.
     

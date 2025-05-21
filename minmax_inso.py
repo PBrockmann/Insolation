@@ -6,8 +6,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import astro as astro
-import inso as inso
 from scipy import optimize
 from operator import itemgetter
 import random
