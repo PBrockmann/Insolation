@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import astro as astro
 import inso as inso
-import minmax_inso as minmax
+import minmax as minmax
 
 
 
@@ -26,10 +26,10 @@ print('')
 
 # select figures to be generated
 
-plot_figure_1 = True
+plot_figure_1 = True 
 plot_figure_2 = False
 plot_figure_3 = False
-plot_figure_4 = False
+plot_figure_4 = False 
 plot_figure_5 = False
 plot_figure_6 = False
 plot_figure_7 = False
