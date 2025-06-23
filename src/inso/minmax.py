@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 from scipy import optimize
 from operator import itemgetter
 import random
-import astro as astro
-import inso as inso
+import inso.astro as astro
+import inso.inso as inso
 
 deg_to_rad = np.pi/180.
 

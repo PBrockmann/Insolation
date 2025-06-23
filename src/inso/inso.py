@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from scipy import optimize
 from scipy.special import elliprd, elliprf, elliprj, ellipeinc, ellipkinc, ellipe
 import scipy.integrate as integrate
-import astro as astro
+import inso.astro as astro
 
 
 #
