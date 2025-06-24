@@ -6,12 +6,11 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import astro as astro
-import inso as inso
 from scipy import optimize
 from operator import itemgetter
 import random
-
+import inso.astro as astro
+import inso.inso as inso
 
 deg_to_rad = np.pi/180.
 
@@ -1115,8 +1114,6 @@ def plot_inso_with_min_max(solar,ecc,obliquity,pre):
 #test when running: $ python minmax_inso.py
 
 if __name__ == '__main__':
-    
-    #astro.astrofiles_path = "./astrofiles/"
     
     ##########  computing the critical values : one example
     ##########    for each of 14 the possible cases (H-branch)

@@ -1,9 +1,14 @@
 # Insolation
 
-This software consists in three python libraries:
-- astro.py is an interface (or computing code) to different astronomical solutions (Berger 1978, Laskar 2004,...) to provide the parameters needed to compute insolation: eccentricity, obliquity and climatic precession. The reference one is Laskar 2004.
-- inso.py (needs astro.py) computes several different flavors of "insolation": instantaneous, daily averaged or any other averaged insolation, "caloric seasons", ... useful for paleoclimatic or long-term climatic studies
-- minmax_inso.py (needs astro.py and inso.py) computes extremal values of daily insolation.
+This software consists of three Python libraries:
 
-Some example of use are also provided:
-- figures.py generates some figures (for a paper to be submitted soon).
+* astro.py: an interface (or computational module) providing various astronomical solutions (Berger 1978, Laskar 2004, ...) to deliver parameters needed for insolation: eccentricity, obliquity, and climatic precession. The reference solution is Laskar 2004.
+* inso.py (depends on astro.py): computes different types of insolation—instantaneous, daily averaged, or other averaged insolation—as well as "caloric seasons", useful for paleoclimatic and long-term climate studies.
+* minmax_inso.py (depends on astro.py and inso.py): computes extremal values of daily insolation.
+
+Some usage examples are also provided.  
+figures.py generates several figures (for a paper to be submitted soon).
+```
+import inso
+inso.figure.display("1")
+```

@@ -12,20 +12,16 @@ from scipy.interpolate import interp1d
 from abc import ABC, abstractmethod
 import matplotlib.pyplot as plt
 
+from pathlib import Path
+MODULE_DIR = Path(__file__).parent
 
-#this path needs to be defined before initializing the "AstroXX" objects
-#
-#astrofiles_path = "/Users/didier/ Avec sauvegarde/Didier/Conceptual models/Inso & Models/insolation/astrofiles/"
-#
-
-astrofiles_path = "./astrofiles/"
-
+#==========================================================================================
 class Astro(ABC):
     def __init__(self):
-        self.path_Laskar2004 = astrofiles_path + "Laskar2004/"
-        self.path_Laskar1993 = astrofiles_path + "Laskar1993/"
-        self.path_Laskar2010 = astrofiles_path + "Laskar2010/"
-        self.path_LaskarMars = astrofiles_path + "LaskarMars2003-2004/"
+        self.path_Laskar2004 = MODULE_DIR / "astrofiles/Laskar2004/"
+        self.path_Laskar1993 = MODULE_DIR / "astrofiles/Laskar1993/"
+        self.path_Laskar2010 = MODULE_DIR / "astrofiles/Laskar2010/"
+        self.path_LaskarMars = MODULE_DIR / "astrofiles/LaskarMars2003-2004/"
     @abstractmethod
     def in_range(self,time):
         pass
@@ -42,6 +38,7 @@ class Astro(ABC):
 
     
 
+#==========================================================================================
 #
 #   Berger 1978
 #    
@@ -98,6 +95,7 @@ class AstroBerger1978(Astro):
         return True
     
         
+#==========================================================================================
 #
 #   Laskar 2004
 #    
@@ -105,11 +103,11 @@ class AstroLaskar2004(Astro):
     def __init__(self):
         super().__init__()
             #Laskar 2004, past 51 ma (double precision)
-        path_Laskar2004_51 = self.path_Laskar2004 + "INSOLN.LA2004.BTL.ASC"
+        path_Laskar2004_51 = self.path_Laskar2004 / "INSOLN.LA2004.BTL.ASC"
             #Laskar 2004, next 21 ma (double precision)
-        path_Laskar2004_21 = self.path_Laskar2004 + "INSOLP.LA2004.BTL.ASC"
+        path_Laskar2004_21 = self.path_Laskar2004 / "INSOLP.LA2004.BTL.ASC"
             #Laskar 2004, past 101 ma (single precision)
-        path_Laskar2004_101 = self.path_Laskar2004 + "INSOLN.LA2004.BTL.100.ASC"
+        path_Laskar2004_101 = self.path_Laskar2004 / "INSOLN.LA2004.BTL.100.ASC"
         with open(path_Laskar2004_51,"r") as text_file:
             a51 = loadtxt(io.StringIO(text_file.read().replace('D', 'E')))
         with open(path_Laskar2004_21,"r") as text_file:
@@ -133,6 +131,7 @@ class AstroLaskar2004(Astro):
     def in_range(self,time):
         return (time >= -101000.)and(time <= 21000.)
     
+#==========================================================================================
 #    
 #   Laskar 1993
 #    
@@ -140,9 +139,9 @@ class AstroLaskar1993_01(Astro):
     def __init__(self):
         super().__init__()
             #Laskar 1993-01, past 20 ma (double precision)
-        path_Laskar1993_01_20 = self.path_Laskar1993 + "INSOLN.LA93_01.BTL.ASC"
+        path_Laskar1993_01_20 = self.path_Laskar1993 / "INSOLN.LA93_01.BTL.ASC"
             #Laskar 1993-01, next 10 ma (double precision)
-        path_Laskar1993_01_10 = self.path_Laskar1993 + "INSOLP.LA93_01.BTL.ASC"
+        path_Laskar1993_01_10 = self.path_Laskar1993 / "INSOLP.LA93_01.BTL.ASC"
         with open(path_Laskar1993_01_20,"r") as text_file:
             a20 = loadtxt(io.StringIO(text_file.read().replace('D', 'E')))
         with open(path_Laskar1993_01_10,"r") as text_file:
@@ -168,9 +167,9 @@ class AstroLaskar1993_11(Astro):
     def __init__(self):
         super().__init__()
             #Laskar 1993-11, past 20 ma (double precision)
-        path_Laskar1993_11_20 = self.path_Laskar1993 + "INSOLN.LA93_11.BTL.ASC"
+        path_Laskar1993_11_20 = self.path_Laskar1993 / "INSOLN.LA93_11.BTL.ASC"
             #Laskar 1993-11, next 10 ma (double precision)
-        path_Laskar1993_11_10 = self.path_Laskar1993 + "INSOLP.LA93_11.BTL.ASC"
+        path_Laskar1993_11_10 = self.path_Laskar1993 / "INSOLP.LA93_11.BTL.ASC"
         with open(path_Laskar1993_11_20,"r") as text_file:
             a20 = loadtxt(io.StringIO(text_file.read().replace('D', 'E')))
         with open(path_Laskar1993_11_10,"r") as text_file:
@@ -197,9 +196,9 @@ class AstroLaskarMars2004(Astro):
     def __init__(self):
         super().__init__()
         #Laskar 2004, past 21 ma (double precision)
-        LaskarMars2004_21 = self.path_LaskarMars + "INSOLN.LA2004.MARS.ASC"
+        LaskarMars2004_21 = self.path_LaskarMars / "INSOLN.LA2004.MARS.ASC"
         #Laskar 2004, next 11 ma (double precision)
-        LaskarMars2004_11 = self.path_LaskarMars + "INSOLP.LA2004.MARS.ASC"
+        LaskarMars2004_11 = self.path_LaskarMars / "INSOLP.LA2004.MARS.ASC"
         with open(LaskarMars2004_21,"r") as text_file:
             a20 = loadtxt(io.StringIO(text_file.read().replace('D', 'E')))
         with open(LaskarMars2004_11,"r") as text_file:
@@ -250,6 +249,7 @@ class AstroLaskarMars2003(Astro):
     def in_range(self,time):
         return (time >= -21000.)and(time <= 11000.)
 
+#==========================================================================================
 #
 #   Laskar 2010: eccentricity only
 #    
@@ -257,7 +257,7 @@ class AstroLaskar2010a(Astro):
     def __init__(self):
         super().__init__()
             #Laskar 2010a, de -249999 à +0
-        path_Laskar2010a = self.path_Laskar2010 + "La2010a_ecc3L.dat"
+        path_Laskar2010a = self.path_Laskar2010 / "La2010a_ecc3L.dat"
         with open(path_Laskar2010a,"r") as text_file:
             a = loadtxt(text_file)
         self.ecc_function = interp1d(a[:,0],a[:,1],kind='cubic')
@@ -269,7 +269,7 @@ class AstroLaskar2010b(Astro):
     def __init__(self):
         super().__init__()
             #Laskar 2010b, de -249999 à +0
-        path_Laskar2010b = self.path_Laskar2010 + "La2010b_ecc3L.dat"
+        path_Laskar2010b = self.path_Laskar2010 / "La2010b_ecc3L.dat"
         with open(path_Laskar2010b,"r") as text_file:
             a = loadtxt(text_file)
         self.ecc_function = interp1d(a[:,0],a[:,1],kind='cubic')
@@ -281,7 +281,7 @@ class AstroLaskar2010c(Astro):
     def __init__(self):
         super().__init__()
             #Laskar 2010c, de -249999 à +0
-        path_Laskar2010c = self.path_Laskar2010 + "La2010c_ecc3L.dat"
+        path_Laskar2010c = self.path_Laskar2010 / "La2010c_ecc3L.dat"
         with open(path_Laskar2010c,"r") as text_file:
             a = loadtxt(text_file)
         self.ecc_function = interp1d(a[:,0],a[:,1],kind='cubic')
@@ -293,7 +293,7 @@ class AstroLaskar2010d(Astro):
     def __init__(self):
         super().__init__()
             #Laskar 2010d, de -249999 à +0
-        path_Laskar2010d = self.path_Laskar2010 + "La2010d_ecc3L.dat"
+        path_Laskar2010d = self.path_Laskar2010 / "La2010d_ecc3L.dat"
         with open(path_Laskar2010d,"r") as text_file:
             a = loadtxt(text_file)
         self.ecc_function = interp1d(a[:,0],a[:,1],kind='cubic')
@@ -313,7 +313,6 @@ class AstroLaskar2010d(Astro):
 
 if __name__ == '__main__':
     
-    #astrofiles_path = "/Users/didier/ Avec sauvegarde/Didier/Conceptual models/Inso & Models/insolation/astrofiles/"
     deg_to_rad = np.pi/180.
 
     t0,t1 = (-2000,0)
