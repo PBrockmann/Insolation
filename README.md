@@ -1,5 +1,8 @@
 # Insolation
 
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15682056.svg)](https://doi.org/10.5281/zenodo.15682056)
+
 This software consists of three Python libraries:
 
 * astro.py: an interface (or computational module) providing various astronomical solutions (Berger 1978, Laskar 2004, ...) to deliver parameters needed for insolation: eccentricity, obliquity, and climatic precession. The reference solution is Laskar 2004.
