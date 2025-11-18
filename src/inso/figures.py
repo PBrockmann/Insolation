@@ -301,6 +301,36 @@ def display(figureId = None):
         plt.show()
     
     ########################################
+    elif figureId == "10":
+        a = astro.AstroLaskar2004()
+        t = np.linspace(-500,0,501)
+        obliquity = a.obliquity(t)
+        eccentricity = a.eccentricity(t)
+        climatic_precession = a.precession_angle(t)
+        solar = 1365
+        fig, axs = plt.subplots(1,2,figsize=(12, 4))
+        gg = np.empty(len(t))
+        lat = 65*deg_to_rad
+        for i in range(len(t)):
+            gg[i] = solar*minmax.inso_caloric_summer(lat,eccentricity[i],obliquity[i],climatic_precession[i]) \
+                - solar*inso.inso_caloric_summer_NH(lat,obliquity[i],eccentricity[i],climatic_precession[i])
+        axs[0].plot(t,gg)
+        axs[0].set_title("difference between WCalS and WCalSSol (65°N)")
+        axs[0].set_ylabel("∆inso (W/m2)")
+        axs[0].set_xlabel("time (kyr)")
+
+        lat = 15*deg_to_rad
+        for i in range(len(t)):
+            gg[i] = solar*minmax.inso_caloric_summer(lat,eccentricity[i],obliquity[i],climatic_precession[i]) \
+                - solar*inso.inso_caloric_summer_NH(lat,obliquity[i],eccentricity[i],climatic_precession[i])
+        axs[1].plot(t,gg)
+        axs[1].set_title("difference between WCalS and WCalSSol (15°N)")
+        axs[1].set_ylabel("∆inso (W/m2)")
+        axs[1].set_xlabel("time (kyr)")
+        plt.gcf().canvas.set_window_title('figure 10')
+        plt.show()
+        
+    ########################################
     elif figureId == "A1":
         fig, axs = plt.subplots(1,2,figsize=(12, 4))
         minmax.subplot_boundaries(axs[0],.2)
