@@ -36,6 +36,62 @@ class Astro(ABC):
     def precession_parameter(self,time):
         return self.eccentricity(time)*np.sin(self.precession_angle(time))
 
+
+#==========================================================================================
+#
+#   Stockwell-Pilgrim 1904
+#
+class StockwellPilgrim1904(Astro):
+    def __init__(self):
+        piDeg = np.pi/180
+        piSec = piDeg/3600
+        self.fcr = piSec*np.array([45.312168, 43.846111, 33.044849, 32.029325, 49.776573, 47.522157, 24.503672])
+        self.bc = np.array([[21, 6, 26.8], [132, 40, 56.2], [292, 49, 53.2], [251, 45, 8.6], [20, 31, 24.6], [133, 56, 10.8], [306, 19, 21.2]])
+        self.bcr = piSec*np.matmul( self.bc, np.array([3600,60,1]) )
+        self.ac = piSec*np.array([696.462, -552.463, 2250.29, 8708.52, 10.0558, 57.102, -1910.92])
+        self.dc = piSec*np.array([-248.520, 196.017, -755.057, -2901.753, -3.644, -2.539, 595.433])
+        self.Pre1 = piSec*8915.6;
+        self.Pre2 = piSec*50.438239;
+        self.Obl = piSec * np.dot(np.array([3600,60,1]),np.array([23, 17, 16.57]))
+        
+        self.nc = np.array([0.0053002, -0.0151823, 0.0125684, 0.0173974, 0.000013561, 0.00057941, 0.0161491, -0.0024585])
+        self.gcr = piSec*np.array([5.5550002, 7.3790776, 17.4034121, 18.0984790, 0.6166870, 2.7277089, 3.7172386, 22.4611216])
+        self.xc = np.array([[87, 28, 12.8], [18, 39, 8.9], [329, 15, 1.2], [134, 45, 1.6], [67, 56, 42.3], [105, 6, 59.3], [28, 8, 55.1], [307, 56, 54.3]])
+        self.xcr = piSec*np.matmul( self.xc, np.array([3600,60,1]) )
+    
+    def general_precession(self,t):
+        p = self.Pre2 * t + self.Pre1
+        for i in range(7):
+            p += self.ac[i] * np.sin( self.fcr[i]*t + self.bcr[i] )
+        return p
+    def eccAndpi(self,t):
+        xes = 0         #-> e sin(π)
+        xec = 0         #-> e cos(π)
+        for i in range(8):
+            arg = self.gcr[i] * t + self.xcr[i]
+            xes += self.nc[i] * np.sin( arg )
+            xec += self.nc[i] * np.cos( arg )
+        return (xes,xec)
+            
+    def obliquity(self,time):
+        t = 1000*time
+        x = self.Obl
+        for i in range(7):
+            x += self.dc[i] * np.cos( self.fcr[i]*t + self.bcr[i] )
+        return x
+    def precession_angle(self,time):
+        t = 1000*time
+        xes,xec = self.eccAndpi(t)
+        perh = np.arctan2(xes,xec) + self.general_precession(t)
+        q,r = divmod(perh, 2*np.pi)
+        return r
+    def eccentricity(self,time):
+        xes,xec = self.eccAndpi(1000*time)
+        return np.sqrt(xes*xes+xec*xec)
+    def in_range(self,time):
+        return True
+    def info(self):
+        return "StockwellPilgrim1904: Time is from 1850 AD.\nPilgrim L.: Versuch einer rechnerischen Behandlung der Eiszeitalters, Jahresshefte des Vereins für Vaterländische Naturkunde in Württemberg, 60, 26-117, 1904"
     
 
 #==========================================================================================
@@ -93,7 +149,9 @@ class AstroBerger1978(Astro):
         return x
     def in_range(self,time):
         return True
-    
+    def info(self):
+        return "AstroBerger1978: Time is from 1950 AD.\nBerger, A. : Long-term variations of daily insolation and Quaternary climatic change, Journal of the Atmospheric Sciences, 35, 2362–2367, 1978"
+  
         
 #==========================================================================================
 #
@@ -130,6 +188,9 @@ class AstroLaskar2004(Astro):
         return self.pre_function(time)
     def in_range(self,time):
         return (time >= -101000.)and(time <= 21000.)
+    def info(self):
+        return "AstroLaskar2004: Time is from 2000 AD.\nLaskar, J., Robutel, P., Joutel, F., Gastineau, M., Correia, A. C. M., & Levrard, B. : A long-term numerical solution for the insolation quantities of the Earth. Astronomy & Astrophysics, 428, 261–285– doi: 10.1051–0004–6361:20041335, 2004"
+
     
 #==========================================================================================
 #    
@@ -162,6 +223,8 @@ class AstroLaskar1993_01(Astro):
         return self.pre_function(time)
     def in_range(self,time):
         return (time >= -20000.)and(time <= 10000.)
+    def info(self):
+        return "AstroLaskar1993_01: Time is from 2000 AD.\nLaskar, J., Joutel, F., and Boudin, F.: Orbital, precessional, and insolation quantities for the Earth from -20 Myr to +10 Myr. Astronomy & Astrophysics, 270, 522–533, 1993"
 
 class AstroLaskar1993_11(Astro):
     def __init__(self):
@@ -190,6 +253,8 @@ class AstroLaskar1993_11(Astro):
         return self.pre_function(time)
     def in_range(self,time):
         return (time >= -20000.)and(time <= 10000.)
+    def info(self):
+        return "AstroLaskar1993_11: Time is from 2000 AD.\nLaskar, J., Joutel, F., and Boudin, F.: Orbital, precessional, and insolation quantities for the Earth from -20 Myr to +10 Myr. Astronomy & Astrophysics, 270, 522–533, 1993"
 
 
 class AstroLaskarMars2004(Astro):
@@ -219,6 +284,8 @@ class AstroLaskarMars2004(Astro):
         return self.pre_function(time)
     def in_range(self,time):
         return (time >= -21000.)and(time <= 11000.)
+    def info(self):
+        return "AstroLaskarMars2004: Time is from 2000 AD.\nLaskar, J., Correia, A. C. M., Gastineau, M., Joutel, F., Levrard, B., and Robutel, P. : Long term evolution and chaotic diffusion of the insolation quantities of Mars. Icarus, 170(2), 343–364, 2004"
 
 
 class AstroLaskarMars2003(Astro):
@@ -248,6 +315,8 @@ class AstroLaskarMars2003(Astro):
         return self.pre_function(time)
     def in_range(self,time):
         return (time >= -21000.)and(time <= 11000.)
+    def info(self):
+        return "AstroLaskarMars2003: Time is from 2000 AD.\nLaskar, J., Correia, A. C. M., Gastineau, M., Joutel, F., Levrard, B., and Robutel, P. : Long term evolution and chaotic diffusion of the insolation quantities of Mars. Icarus, 170(2), 343–364, 2004"
 
 #==========================================================================================
 #
@@ -265,6 +334,9 @@ class AstroLaskar2010a(Astro):
         return self.ecc_function(time)
     def in_range(self,time):
         return (time >= -249999.)and(time <= 0.)
+    def info(self):
+        return "AstroLaskar2010a: Time is from 2000 AD.\nLaskar, J., Fienga, A., Gastineau, M., & Manche, H. : La2010: a new orbital solution for the long-term motion of the Earth. Astronomy & Astrophysics, 532, A89, doi: 10.1051/0004-6361/201116836, 2011"
+
 class AstroLaskar2010b(Astro):
     def __init__(self):
         super().__init__()
@@ -277,6 +349,9 @@ class AstroLaskar2010b(Astro):
         return self.ecc_function(time)
     def in_range(self,time):
         return (time >= -249999.)and(time <= 0.)
+    def info(self):
+        return "AstroLaskar2010b: Time is from 2000 AD.\nLaskar, J., Fienga, A., Gastineau, M., & Manche, H. : La2010: a new orbital solution for the long-term motion of the Earth. Astronomy & Astrophysics, 532, A89, doi: 10.1051/0004-6361/201116836, 2011"
+    
 class AstroLaskar2010c(Astro):
     def __init__(self):
         super().__init__()
@@ -289,6 +364,9 @@ class AstroLaskar2010c(Astro):
         return self.ecc_function(time)
     def in_range(self,time):
         return (time >= -249999.)and(time <= 0.)
+    def info(self):
+        return "AstroLaskar2010c: Time is from 2000 AD.\nLaskar, J., Fienga, A., Gastineau, M., & Manche, H. : La2010: a new orbital solution for the long-term motion of the Earth. Astronomy & Astrophysics, 532, A89, doi: 10.1051/0004-6361/201116836, 2011"
+        
 class AstroLaskar2010d(Astro):
     def __init__(self):
         super().__init__()
@@ -301,6 +379,8 @@ class AstroLaskar2010d(Astro):
         return self.ecc_function(time)
     def in_range(self,time):
         return (time >= -249999.)and(time <= 0.)
+    def info(self):
+        return "AstroLaskar2010d: Time is from 2000 AD.\nLaskar, J., Fienga, A., Gastineau, M., & Manche, H. : La2010: a new orbital solution for the long-term motion of the Earth. Astronomy & Astrophysics, 532, A89, doi: 10.1051/0004-6361/201116836, 2011"
 
 
 #######################     END     #######################
