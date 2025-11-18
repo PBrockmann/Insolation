@@ -6,11 +6,12 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import astro as astro
+import inso as inso
 from scipy import optimize
 from operator import itemgetter
 import random
-import inso.astro as astro
-import inso.inso as inso
+
 
 deg_to_rad = np.pi/180.
 
@@ -555,7 +556,9 @@ def lbd_minmaxH(e,eps,per,critPoints):   #   π/2 < per < 3π/2
     
     def derPhi(x):      # replacement for 0==DminmaxPhi_Dlon(x,eps,e,per)... numerically more favorable...
         # derPhi(0.3) > 0 (always true ..)
-        if x>np.pi/2:
+        # derPhi(π/2) < 0 (always true ..)
+        # ->  there is 1 or 3 roots between 0.3 and π/2. Finding the first one is easy.
+        if x>=np.pi/2:
             return -1
         cosxp = np.cos(x-per)
         tanx = np.tan(x)
@@ -572,26 +575,49 @@ def lbd_minmaxH(e,eps,per,critPoints):   #   π/2 < per < 3π/2
         #print("per,f1,f2 = ",per,", ",derPhi(g1),", ",derPhi(g1))
         return np.array([optimize.root_scalar(lambda x: derPhi(x), method='brentq', bracket=(g1,g2)).root])
     def triple_root(ga=.3,gb=lbdB1):     # returns 3 roots of derPhi(x)==0, with x between ga and gb
-        #print("per,fa,fb = ",per,", ",derPhi(ga),", ",derPhi(gb))
+        #print("ga,gb,gb° = ",ga,", ",gb,", ",gb*180/np.pi)
+        #print("per°,fa,fb = ",per*180/np.pi,", ",derPhi(ga),", ",derPhi(gb))
+        #my_plot(derPhi,ga,gb)
         x1 = optimize.root_scalar(lambda x: derPhi(x), method='brentq', bracket=(ga,gb)).root
         to_solve2 = (lambda x: derPhi(x)/(x-x1))
+        gc = 2*np.arctan( (1+e*(3-3*np.pi+2*per))/(1+3*e) )  # almost equal (to order 1) to lambda_max(e,per)[1], but smaller (?)
         fa = to_solve2(ga)   # < 0
         fb = to_solve2(gb)   # < 0
-        fab = max(fa,fb)     # < 0
-        #print("fa = ",fa)
-        #print("fb = ",fb)
-        test_solve2 = (lambda z: to_solve2(z*ga+(1-z)*gb))
-        for i in range(10000):   #certainly not optimal !!  -- should biais the distribution towards gb for per near the boundaries (π/2,3π/2)
-            zz = random.random()  # 0 < zz < 1
-            if test_solve2(zz) > fab:    # found a bracketing for a maximum of test_solve2... which should be >0
-                max2 = optimize.minimize_scalar(lambda z: -test_solve2(z), bracket=(0,zz,1))
-                break
-        #print("i, zz = ",i,", ",zz)
-        assert i<9999, "error in lbd_minmaxH.triple_root : i="+str(i)
-        assert max2.fun<0, "error in lbd_minmaxH.triple_root : i="+str(i)
-        gc = max2.x*ga+(1-max2.x)*gb
+        fc = to_solve2(gc)   # ?
+        if (fc < 0):
+        #if (False):
+            ntry = 20
+            #to_solve3 = (lambda x: to_solve2(gc-10**x))
+            #print("lbdB = ",lambda_max(e,per)[1],"   x2 = ",x2)
+            #print("fa = ",fa,"   fb = ",fb,"   fc = ",fc)
+            #print("fa = ",to_solve3(-np.log10(gc-ga)),"   fc+ = ",to_solve3(10))
+            for i in range(ntry):  # 0 to 19
+                gi = gc-10**( -(ntry-i)/2 )   # 10**(-9.5) to 10**(-.5)
+                fi = to_solve2(gi)
+                #print("f(",i,") = ",fi)
+                if fi>0:
+                    gc = gi
+                    fc = fi
+                    break
+        if (fc < 0):
+            fabc = max(fa,max(fc,fb))     # < 0
+            #print("fa = ",fa)
+            #print("fb = ",fb)
+            
+            #my_plot(to_solve2,1.54,gb)
+            test_solve2 = (lambda z: to_solve2(z*ga+(1-z)*gb))
+            for i in range(10000):   #certainly not optimal !!  -- should biais the distribution towards gb for per near the boundaries (π/2,3π/2)
+                zz = random.random()  # 0 < zz < 1
+                if test_solve2(zz) > fabc:    # found a bracketing for a maximum of test_solve2... which should be >0
+                    max2 = optimize.minimize_scalar(lambda z: -test_solve2(z), bracket=(0,zz,1))
+                    break
+            #print("i, zz = ",i,", ",zz)
+            assert i<9999, "error in lbd_minmaxH.triple_root : i="+str(i)
+            assert max2.fun<0, "error in lbd_minmaxH.triple_root : i="+str(i)
+            gc = max2.x*ga+(1-max2.x)*gb
         x2 = optimize.root_scalar(lambda x: to_solve2(x), method='brentq', bracket=(ga,gc)).root
         x3 = optimize.root_scalar(lambda x: to_solve2(x), method='brentq', bracket=(gc,gb)).root
+        #print("3sol = ",np.array([x1,x2,x3]))
         return np.array([x1,x2,x3])
     
     if len(critPoints[1])==0:
@@ -928,6 +954,7 @@ def H_branch(ecc,eps,pre):
 def L_minmax(lat,ecc,eps,pre):
     prep = mod_2pi_minus_pi_over_2(pre)
     brL = L_branch(ecc,eps,prep)
+    small = 1e-8
     #print("brL = ",brL)
     #print("pre = ",pre)
     #print("eps = ",eps)
@@ -939,20 +966,27 @@ def L_minmax(lat,ecc,eps,pre):
             #print("lat = ",lat,", ",brL[i][1],", ",brL[i+1][1])
             #print("lat = ",lat,", ",minmaxPhi(brL[i][0],eps,ecc,prep),", ",minmaxPhi(brL[i+1][0],eps,ecc,prep))
             #print("lat = ",lat,", ",minmaxPhiL(brL[i][0],eps,ecc,prep),", ",minmaxPhiL(brL[i+1][0],eps,ecc,prep))
-            if brL[i][0]==brL[i+1][0]:
+            #if brL[i][0]==brL[i+1][0]:
+            if abs(brL[i][0]-brL[i+1][0])<small:
                 x = brL[i][0]
+            elif abs(lat-minmaxPhiL(brL[i][0],eps,ecc,prep))<small:
+                x = brL[i][0]
+            elif abs(lat-minmaxPhiL(brL[i+1][0],eps,ecc,prep))<small:
+                x = brL[i+1][0]
             else:
                 #print("brL[i][0] = ",brL[i][0],", ",minmaxPhi(brL[i][0],eps,ecc,prep))
                 #print("brL[i+1][0] = ",brL[i+1][0],", ",minmaxPhi(brL[i+1][0],eps,ecc,prep))
                 #print("brL[i][0] = ",brL[i][0],", ",minmaxPhiL(brL[i][0],eps,ecc,prep))
                 #print("brL[i+1][0] = ",brL[i+1][0],", ",minmaxPhiL(brL[i+1][0],eps,ecc,prep))
                 x = optimize.root_scalar(lambda z: lat-minmaxPhiL(z,eps,ecc,pre), method='brentq', bracket=(brL[i][0],brL[i+1][0])).root
-            minmax_list += ((x,inso.inso_dayly_radians(x,lat,eps,ecc,prep)),)
+            fx = inso.inso_dayly_radians(x,lat,eps,ecc,prep)
+            minmax_list += ((x,np.maximum(0,fx)),)
     #print("x, i = ",x,", ",solar*inso_dayly_radians(x,lat,obliquity,ecc,pre))
     return minmax_list
 
 def H_minmax(lat,ecc,eps,pre):
     brH = H_branch(ecc,eps,pre)
+    small = 1e-8
     #print("brH = ",brH)
     minmax_list = ()
     for i in range(len(brH)-1):
@@ -984,32 +1018,78 @@ def smallest_min(lat,ecc,eps,pre):
     min_i = np.argmin(minmax_inso[:,1])
     return minmax_inso[min_i]
 
-def integrated_inso_above(thresh,lat,ecc,eps,pre):
+
+###################
+#
+#   for a given insolation value "thresh", returns the lists of true longitudes for which the daily insolation equals "thresh"
+#   - in up_list when insolation increases
+#   - in down_list when insolation decreases
+#
+def up_and_down_list(min_max_table,thresh,lat,ecc,eps,prep):
     up_list = ()
     down_list = ()
+    for i in range(len(min_max_table)-1):
+        if (min_max_table[i][1]-thresh)*(min_max_table[i+1][1]-thresh) < 0:
+            a = min_max_table[i][0]
+            b = min_max_table[i+1][0]
+            if b<a:
+                b += 2*np.pi
+            x = optimize.root_scalar(lambda z: thresh-inso.inso_dayly_radians(z,lat,eps,ecc,prep), method='brentq', bracket=(a,b)).root
+            if (min_max_table[i+1][1]>min_max_table[i][1]):
+                up_list += (x,)
+            else:
+                down_list += (x,)
+    return (up_list,down_list)
+
+
+###################
+#
+#   return the insolation value "thresh" above which the insolation is half of the year
+#
+def inso_caloric_threshold(lat,ecc,eps,pre):
     prep = mod_2pi_minus_pi_over_2(pre)
     LMinMax = L_minmax(lat,ecc,eps,prep)
     HMinMax = H_minmax(lat,ecc,eps,prep)
     minmax_inso = np.array(LMinMax+HMinMax+(LMinMax[0],))
-    for i in range(len(minmax_inso)-1):
-        if (minmax_inso[i][1]-thresh)*(minmax_inso[i+1][1]-thresh) < 0:
-            a = minmax_inso[i][0]
-            b = minmax_inso[i+1][0]
-            if b<a:
-                b += 2*np.pi
-            #print("  in : ",minmax_inso[i]," , ",minmax_inso[i+1])
-            #print("  in : ",inso.inso_dayly_radians(a,lat,eps,ecc,prep)," , ",inso.inso_dayly_radians(b,lat,eps,ecc,prep))
-            x = optimize.root_scalar(lambda z: thresh-inso.inso_dayly_radians(z,lat,eps,ecc,prep), method='brentq', bracket=(a,b)).root
-            #print(x,"  in : ",minmax_inso[i]," , ",minmax_inso[i+1])
-            if (minmax_inso[i+1][1]>minmax_inso[i][1]):
-                up_list += (x,)
-            else:
-                down_list += (x,)
-    if (up_list==() and minmax_inso[0][1]>thresh):
+    max_i = np.max(minmax_inso[:,1])
+    min_i = np.min(minmax_inso[:,1])
+    def f(x):
+        if (x<=min_i):
+            return 1
+        if (x>=max_i):
+            return 0
+        (up_list,down_list) = up_and_down_list(minmax_inso,x,lat,ecc,eps,pre)
+        if (up_list==() and minmax_inso[0][1]>x):  # always above threshold
+            return 1
+        elif (up_list==() and minmax_inso[1][1]<x):  # always below threshold
+            return 0
+        else:
+            time_above = 0
+            for i in range(len(up_list)):
+                down_i = down_list[i]
+                up_i = up_list[i]
+                if down_i<up_list[i]:
+                    down_i += 2*np.pi
+                time_above += inso.length_of_season(up_list[i],down_i,ecc,pre)
+            return time_above
+    thresh = optimize.root_scalar(lambda z: 0.5-f(z), method='brentq', bracket=(min_i,max_i)).root
+    return thresh
+
+
+###################
+#
+#   integrated insolation above some threshold. Dimensionless.
+#       it should be multiplied by solar constant (W/m2) and year duration (s) to get the result in J/m2
+#
+def integrated_inso_above(thresh,lat,ecc,eps,pre):
+    prep = mod_2pi_minus_pi_over_2(pre)
+    LMinMax = L_minmax(lat,ecc,eps,prep)
+    HMinMax = H_minmax(lat,ecc,eps,prep)
+    minmax_inso = np.array(LMinMax+HMinMax+(LMinMax[0],))   # ( (lon_min1, inso_min1), (lon_max1,inso_max1)..., (lon_min1, inso_min1))
+    (up_list,down_list) = up_and_down_list(minmax_inso,thresh,lat,ecc,eps,prep)
+    if (up_list==() and minmax_inso[0][1]>thresh):  # if insolation always above threshold (first min>thresh and no crossing), integrate over [0,2π]
         up_list += (0,)
         down_list += (2*np.pi,)
-#print("up = ",up_list)
-#print("down = ",down_list)
     integral = 0.
     for i in range(len(up_list)):
         if down_list[i]>up_list[i]:
@@ -1018,6 +1098,41 @@ def integrated_inso_above(thresh,lat,ecc,eps,pre):
             integral += inso.inso_irrad(2*np.pi+down_list[i],lat,eps)-inso.inso_irrad(up_list[i],lat,eps)
     pisq = 2*np.pi*np.pi*np.sqrt(1-ecc*ecc)
     return integral/pisq
+
+def integrated_inso_below(thresh,lat,ecc,eps,pre):
+    prep = mod_2pi_minus_pi_over_2(pre)
+    LMinMax = L_minmax(lat,ecc,eps,prep)
+    HMinMax = H_minmax(lat,ecc,eps,prep)
+    minmax_inso = np.array(LMinMax+HMinMax+(LMinMax[0],))
+    (up_list,down_list) = up_and_down_list(minmax_inso,thresh,lat,ecc,eps,prep)
+    if (up_list==() and minmax_inso[1][1]<thresh):  # if insolation always above threshold (first max<thresh and no crossing), integrate over [0,2π]
+        up_list += (0,)
+        down_list += (2*np.pi,)
+    integral = 0.
+    up_list += (up_list[-1],)
+    for i in range(len(down_list)):
+        if up_list[i+1]>down_list[i]:
+            integral += inso.inso_irrad(up_list[i+1],lat,eps)-inso.inso_irrad(down_list[i],lat,eps)
+        else:
+            integral += inso.inso_irrad(2*np.pi+up_list[i+1],lat,eps)-inso.inso_irrad(down_list[i],lat,eps)
+    pisq = 2*np.pi*np.pi*np.sqrt(1-ecc*ecc)
+    return integral/pisq
+
+###################
+#
+#   the caloric summer insolation
+#       dimensionless: it should be multiplied by solar constant (W/m2) to get the result in W/m2
+#   NB: it returns 2*integrated_inso_above() since it is multiplied by T (year) and divided by T/2 (interval duration)
+#           to return the averaged value (W/m2)
+#       it should be multiplied by solar*T/2 to get the result in J/m2
+#
+def inso_caloric_summer(lat,ecc,eps,pre):
+    return 2*integrated_inso_above(inso_caloric_threshold(lat,ecc,eps,pre),lat,ecc,eps,pre)
+
+def inso_caloric_winter(lat,ecc,eps,pre):
+    return 2*integrated_inso_below(inso_caloric_threshold(lat,ecc,eps,pre),lat,ecc,eps,pre)
+
+
 
 def plot_inso_with_min_max(solar,ecc,obliquity,pre):
     prep = mod_2pi_minus_pi_over_2(pre)
@@ -1114,6 +1229,8 @@ def plot_inso_with_min_max(solar,ecc,obliquity,pre):
 #test when running: $ python minmax_inso.py
 
 if __name__ == '__main__':
+    
+    #astro.astrofiles_path = "./astrofiles/"
     
     ##########  computing the critical values : one example
     ##########    for each of 14 the possible cases (H-branch)
