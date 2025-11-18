@@ -10,7 +10,7 @@ This software consists of three Python libraries:
 * minmax.py (depends on astro.py and inso.py): computes extremal values of daily insolation.
 
 Some usage examples are also provided.  
-figures.py generates several figures (for a paper to be submitted soon).
+figures.py generates several figures (for a paper currently under discussion at: https://egusphere.copernicus.org/preprints/2025/egusphere-2025-2885/).
 ```
 import inso
 inso.figure.display("1")
