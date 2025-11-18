@@ -11,8 +11,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
 from scipy.special import elliprd, elliprf, elliprj, ellipeinc, ellipkinc, ellipe
+import astro as astro
 import scipy.integrate as integrate
-import inso.astro as astro
 
 
 #
@@ -264,12 +264,73 @@ def inso_length_of_day(lon,phi,eps):
 #
 def inso_radians(h,lon,phi,eps,e,per):
     sindelta = np.sin(lon)*np.sin(eps)
-    g = np.sin(phi)*sindelta + np.cos(h)*np.cos(phi)*np.sqrt(1-sindelta*sindelta)
+    cosdelta = np.sqrt(1-sindelta*sindelta)
+    g = np.sin(phi)*sindelta + np.cos(h)*np.cos(phi)*cosdelta
     if g<=0:
         return 0
     else:
         ar = (1-e*np.cos(lon-per))/(1-e*e)    # ratio a/r
         return ar*ar*g
+
+###################
+#
+#   dimensionless (integrated over H) insolation - should be multiplied by solar constant and by duration of day (86400 s) to get J/m2
+#
+def inso_primitive(h,s,p,h0):
+    ht = np.sign(h) * np.minimum(abs(h),h0)
+    g = (p*ht + np.sin(ht)*np.sqrt( s+p*p ))/(2*np.pi)
+    return g
+
+def inso_primitive2(a,b,h):
+    u = abs(h)
+    aa = abs(a)
+    a1 = 1 - a*a
+    r1 = np.sqrt(a1)
+    su = np.sign(u-np.pi/2)
+    sinu = np.sin(u)
+    cos2u = 1 - sinu*sinu
+    dd = a1*cos2u + a*a
+    d = np.where( dd>0, np.sqrt( cos2u/dd ), 0 )
+    c = d*r1
+    asc = r1*sinu*np.arcsin(c)
+    i0 = np.where( u>np.pi/2, np.pi/2 * (1-aa), asc - aa*u + np.arccos(d) )
+    
+    sa = np.where( a>0, 1, -1 )   # is never equal to zero !
+    bb = sa * b
+    if bb<=su*c:
+        s,p,ac = inso_ac( aa,bb )
+        i1 = np.arccos( -bb/np.sqrt(s+b*b) ) + bb*np.sqrt(s) - aa*(1-b*b)*ac
+    else:
+        s = np.maximum(0,a1-b*b)
+        t = a1 - s
+        rt = np.sqrt(t)
+        i1 = sa*np.sign(b)*sinu*(r1*(rt*np.sqrt(1-t)+np.arcsin(rt)) + aa*(b*b-t)) - aa*u*(1-b*b) - su*asc + np.arccos(-su*d)
+
+    return np.sign(h)*sa*(i1-i0)/2
+
+###################
+#
+#   dimensionless integrated insolation between h1 and h2 - should be multiplied by solar constant and by duration of day (86400 s) to get J/m2
+#   inso_radians_integ(-np.pi,np.pi,lon,phi,eps,e,per) == inso_dayly_radians(lon,phi,eps,e,per)
+#
+def inso_radians_integ(h1,h2,lon,phi,eps,e,per):
+    sindelta = np.sin(lon)*np.sin(eps)
+    s,p,h0 = inso_ac( np.sin(phi), sindelta )
+    g1 = inso_primitive(h1,s,p,h0)
+    g2 = inso_primitive(h2,s,p,h0)
+    ar = (1-e*np.cos(lon-per))/(1-e*e)    # ratio a/r
+    return ar*ar*(g2-g1)
+
+def inso_radians_integ2(h1,h2,lon,phi1,phi2,eps,e,per):
+    sindelta = np.sin(lon)*np.sin(eps)
+    sin1 = np.sin(phi1)
+    sin2 = np.sin(phi2)
+    g11 = inso_primitive2(sindelta,sin1,h1)
+    g12 = inso_primitive2(sindelta,sin1,h2)
+    g21 = inso_primitive2(sindelta,sin2,h1)
+    g22 = inso_primitive2(sindelta,sin2,h2)
+    ar = (1-e*np.cos(lon-per))/(1-e*e)    # ratio a/r
+    return ar*ar*((g22-g21)-(g12-g11))
 
 ###################
 #
@@ -358,6 +419,8 @@ def inso_mean_lon_lat_radians(lon1,lon2,phi1,phi2,eps,e,per):
 
 
 if __name__ == '__main__':
+    
+    #astro.astrofiles_path = "/Users/didier/ Avec sauvegarde/Didier/Conceptual models/Inso & Models/insolation/astrofiles/"
     
     deg_to_rad = np.pi/180.
     
