@@ -264,7 +264,7 @@ def inso_length_of_day(lon,phi,eps):
 #
 def inso_radians(h,lon,phi,eps,e,per):
     sindelta = np.sin(lon)*np.sin(eps)
-    g = np.sin(phi)*sindelta + np.cos(h)*np.sin(phi)*np.sqrt(1-sindelta*sindelta)
+    g = np.sin(phi)*sindelta + np.cos(h)*np.cos(phi)*np.sqrt(1-sindelta*sindelta)
     if g<=0:
         return 0
     else:
