@@ -6,16 +6,16 @@ authors = [{ name="Didier Paillard", email="Didier.Paillard@lsce.ipsl.fr" }]
 readme = "README.md"
 license = "CECILL-2.1"
 
-[project.urls]
-Homepage = "https://github.com/PaleoIPSL/Insolation"
-Repository = "https://github.com/PaleoIPSL/Insolation"
-
 requires-python = ">=3.10"
 dependencies = [
   "numpy>=1.26.4",
   "scipy>=1.14.0",
   "matplotlib>=3.8.4"
 ]
+
+[project.urls]
+Homepage = "https://github.com/PaleoIPSL/Insolation"
+Repository = "https://github.com/PaleoIPSL/Insolation"
 
 [build-system]
 requires = ["setuptools>=77.0"]
