@@ -1,10 +1,14 @@
 [project]
 name = "inso"
-version = "1.1.1"
+version = "1.2.0"
 description = "A module to compute insolation based on eccentricity, obliquity, and climatic precession parameters from various astronomical solutions (Berger 1978, Laskar 2004, ...)."
 authors = [{ name="Didier Paillard", email="Didier.Paillard@lsce.ipsl.fr" }]
 readme = "README.md"
 license = "CECILL-2.1"
+
+[project.urls]
+Homepage = "https://github.com/PaleoIPSL/Insolation"
+Repository = "https://github.com/PaleoIPSL/Insolation"
 
 requires-python = ">=3.10"
 dependencies = [
