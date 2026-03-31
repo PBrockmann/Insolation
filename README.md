@@ -13,5 +13,5 @@ Some usage examples are also provided.
 figures.py generates several figures (for a paper currently under discussion at: https://egusphere.copernicus.org/preprints/2025/egusphere-2025-2885/).
 ```
 import inso
-inso.figure.display("1")
+inso.figures.display("1")
 ```
